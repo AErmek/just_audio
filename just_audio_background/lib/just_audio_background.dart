@@ -168,7 +168,12 @@ class _JustAudioPlayer extends AudioPlayerPlatform {
   _JustAudioPlayer({required this.initRequest}) : super(initRequest.id) {
     _playerAudioHandler = _PlayerAudioHandler(
       initRequest,
-      addPlaybackEventMessageError: eventController.addError,
+      addPlaybackEventMessageError: (error, stackTrace) {
+        if (eventController.isClosed) {
+          Error.throwWithStackTrace(error, stackTrace);
+        }
+        eventController.addError(error, stackTrace);
+      },
     );
     _audioHandler.inner = _playerAudioHandler;
     _audioHandler.playbackState.listen((playbackState) {
@@ -402,7 +407,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
 
   List<MediaItem>? get currentQueue => queue.nvalue;
 
-  void Function(Object error, [StackTrace? stackTrace])
+  void Function(Object error, StackTrace stackTrace)
       addPlaybackEventMessageError;
 
   _PlayerAudioHandler(
